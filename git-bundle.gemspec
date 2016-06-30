@@ -8,9 +8,9 @@ Gem::Specification.new do |spec|
   spec.version       = GitBundle::VERSION
   spec.authors       = ['Pierre Pretorius']
   spec.email         = ['pierre@labs.epiuse.com']
-
-  spec.summary       = %q{Makes life easier when working with git and local overrides of bundled gems.}
-  spec.description   = %q{If you are using Bundler and local overrides of gems or Rails engines this gem might be for you.}
+  spec.summary       = %q{Simplifies working with gems from git repositories in combination with local overrides.}
+  spec.description   = %q{Simplifies working with gems from git repositories in combination with local overrides.
+                          See the github page for more detail.}
   spec.homepage      = 'https://github.com/EPI-USE-Labs/git-bundle'
   spec.license       = 'MIT'
 
