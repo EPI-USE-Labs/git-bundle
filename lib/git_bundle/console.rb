@@ -1,13 +1,12 @@
 module GitBundle
   module Console
-    COLORS = {std: 0,
-              error: 31,
+    COLORS = {error: 31,
               attention: 32,
               prompt: 33,
-              heading: 36}
+              heading: 34}
 
     def puts_repo_heading(repo)
-      puts_heading "#{repo.name} (#{repo.branch})"
+      puts colorize("\n=== #{repo.name} (#{repo.branch})", COLORS[:heading], true)
     end
 
     def puts_heading(text)
@@ -27,8 +26,12 @@ module GitBundle
     end
 
     private
-    def colorize(text, color_code)
-      "\e[#{color_code}m#{text}\e[0m"
+    def colorize(text, color_code, bold = false)
+      if bold
+        "\e[1m\e[#{color_code}m#{text}\e[0m"
+      else
+        "\e[#{color_code}m#{text}\e[0m"
+      end
     end
   end
 end

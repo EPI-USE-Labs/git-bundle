@@ -51,15 +51,17 @@ module GitBundle
     end
 
     def file_changed?(filename)
-      !execute_git("diff --name-only #{filename}").empty?
+      !execute_git("diff --name-only #{filename}").empty? && $?.exitstatus == 0
     end
 
     def add_file(filename)
       execute_git("add #{filename}")
+      $?.exitstatus == 0
     end
 
     def commit(message, *files)
       execute_git("commit -m '#{message}' #{files.join(' ')}")
+      $?.exitstatus == 0
     end
 
     def execute_git(command)

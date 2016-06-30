@@ -1,0 +1,18 @@
+PATH
+  remote: .
+  specs:
+    git-bundle (1.0.2)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  bundler (~> 1.12)
+  git-bundle!
+
+BUNDLED WITH
+   1.12.5
