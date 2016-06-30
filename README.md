@@ -1,8 +1,8 @@
-# Git-bundle
+# Gitb
 
 This gem simplifies working with [gems from git repositories](http://bundler.io/v1.5/git.html):
 ```ruby
-gem 'some_gem_or_rails_engine', git: => 'https://github.com/author/some_gem_or_rails_engine.git'
+gem 'forum_engine', git: 'https://github.com/your_name/forum_engine.git'
 ```
 in combination with [local overrides](http://bundler.io/v1.5/git.html#local):
 ```shell
@@ -11,27 +11,62 @@ bundle config local.some_gem_or_rails_engine /path/to/local/git/repository
 
 ## Usage examples
 
-Let's say you have a Rails application that uses two of your own reusable Rails engines called "forum_engine" and
-"blog_engine".  This is what your Gemfile looks like:
+Let's say you have a Rails application that uses two of your own reusable Rails engines called forum_engine and
+blog_engine.  This is how you include them in your Gemfile:
 ```ruby
 gem 'forum_engine', git: 'https://github.com/your_name/forum_engine.git', branch: :master
 gem 'blog_engine', git: 'https://github.com/your_name/blog_engine.git', branch: :master
 ```
 
 You then add local overrides to your bundle config so that you can work on them like you would work on your main Rails
-application with any change taking immediate effect:
-```shell
+application: any code change takes immediate effect.
+```
 bundle config local.some_gem_or_rails_engine /path/to/forum/git/repository
 bundle config local.some_gem_or_rails_engine /path/to/blog/git/repository
 ```
 
-### Running the same git command on all local overrides
+This gem will make the following scenarios easier and quicker to work with:
 
+**1. Performing the same git command on all local overrides and the main application.**
 
-### Committing and/or pushing changes
+Gitb will relay any command and arguments you pass it to all local override repositories in addition to the main
+repository.  In other words a **gitb pull** will run a **git pull** in all repositories.  This is what the output
+will look like:
+```
+=== forum_engine (master)
+Already up-to-date.
 
-When you want to commit your changes, you need to commit the engine git repositories first and then run bundle install
-in the main Rails application so that it updates the Gemfile.lock with the new git revisions.  Example Gemfile.lock entry:
+=== blog_engine (master)
+remote: Counting objects: 72, done.
+remote: Compressing objects: 100% (53/53), done.
+remote: Total 72 (delta 16), reused 61 (delta 9), pack-reused 0
+Unpacking objects: 100% (72/72), done.
+
+=== your-rails-application (master)
+Already up-to-date.
+```
+
+Another example is a **gitb checkout release** will run **git checkout release** in all repositories:
+```
+=== forum_engine (master)
+Switched to branch 'master'
+Your branch is up-to-date with 'origin/master'.
+
+=== blog_engine (master)
+Switched to branch 'master'
+Your branch is ahead of 'origin/master' by 2 commits.
+  (use "git push" to publish your local commits)
+
+=== your-rails-application (master)
+Switched to branch 'master'
+Your branch is up-to-date with 'origin/master'.
+```
+
+**2. Updating Gemfile.lock when committing and/or pushing changes.**
+
+When you want to commit your changes, the standard process is to commit the engine git repositories first, then run
+bundle install in the main application so that it updates the Gemfile.lock with the new git revisions (shown below).
+Add the Gemfile.lock to a commit and push the main application commits.
 ```
 GIT
   remote: https://github.com/your_name/forum_engine.git
@@ -41,11 +76,9 @@ GIT
 
 This gem combines these steps into one by detecting that your Gemfile.lock needs to be updated when you push your
 changes.  It will run bundle install, add the Gemfile.lock to a new commit and push it with your other commits.  This is
-what it would look like if you run **gitb push** in the main Rails application:
+what it looks like if you run **gitb push** in the main application:
 
 ```shell
-gitb push
-
 === forum_engine (master)
 Counting objects: 11, done.
 Delta compression using up to 4 threads.
