@@ -2,7 +2,7 @@
 
 This gem simplifies working with [gems from git repositories](http://bundler.io/v1.5/git.html):
 ```ruby
-gem 'forum_engine', git: 'https://github.com/your_name/forum_engine.git'
+gem 'forum_engine', git: 'https://github.com/your_name/forum_engine.git', branch: :master
 ```
 in combination with [local overrides](http://bundler.io/v1.5/git.html#local):
 ```shell
@@ -11,8 +11,8 @@ bundle config local.some_gem_or_rails_engine /path/to/local/git/repository
 
 ## Usage examples
 
-Let's say you have a Rails application that uses two of your own reusable Rails engines called forum_engine and
-blog_engine.  This is how you include them in your Gemfile:
+Let's say you have a Rails application that uses two of your own reusable Rails engines called *forum_engine* and
+*blog_engine*.  This is how you include them in your Gemfile:
 ```ruby
 gem 'forum_engine', git: 'https://github.com/your_name/forum_engine.git', branch: :master
 gem 'blog_engine', git: 'https://github.com/your_name/blog_engine.git', branch: :master
@@ -62,11 +62,11 @@ Switched to branch 'master'
 Your branch is up-to-date with 'origin/master'.
 ```
 
-**2. Updating Gemfile.lock when committing and/or pushing changes.**
+**2. Updating Gemfile.lock when pushing changes.**
 
-When you want to commit your changes, the standard process is to commit the engine git repositories first, then run
-bundle install in the main application so that it updates the Gemfile.lock with the new git revisions (shown below).
-Add the Gemfile.lock to a commit and push the main application commits.
+When you want to commit and push changes, the standard process is to commit the engine git repositories first, then
+run *bundle install* on the main application so that it updates the Gemfile.lock with the new git revisions (shown
+below).  Add the Gemfile.lock to a commit and push the main application commits.
 ```
 GIT
   remote: https://github.com/your_name/forum_engine.git
@@ -74,11 +74,12 @@ GIT
   branch: master
 ```
 
-This gem combines these steps into one by detecting that your Gemfile.lock needs to be updated when you push your
-changes.  It will run bundle install, add the Gemfile.lock to a new commit and push it with your other commits.  This is
-what it looks like if you run **gitb push** in the main application:
+With this gem you don't need to run *bundle install* to update the Gemfile.lock yourself.  When you push commits it will
+detecting that your Gemfile.lock needs to be updated, run *bundle install*, add the Gemfile.lock to a new commit with an
+appropriate commit message and push it with your other commits.  This is what it looks like if you run **gitb push** in
+the main application:
 
-```shell
+```
 === forum_engine (master)
 Counting objects: 11, done.
 Delta compression using up to 4 threads.
@@ -110,7 +111,7 @@ Total 13 (delta 6), reused 0 (delta 0)
 
 You can install it yourself:
 
-```shell
+```
 gem install git-bundle
 ```
 
@@ -118,7 +119,7 @@ Or alternatively add this line to your application's Gemfile:
 
 ```ruby
 group :development do
-    gem 'git-bundle'
+  gem 'git-bundle'
 end
 ```
 
