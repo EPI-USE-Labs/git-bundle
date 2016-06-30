@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ['pierre@labs.epiuse.com']
 
   spec.summary       = %q{Makes life easier when working with git and local overrides of bundled gems.}
-  spec.description   = %q{Makes life easier when working with git and local overrides of bundled gems.}
+  spec.description   = %q{If you are using Bundler and local overrides of gems or Rails engines this gem might be for you.}
   spec.homepage      = 'https://github.com/EPI-USE-Labs/git-bundle'
   spec.license       = 'MIT'
 
