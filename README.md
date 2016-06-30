@@ -48,17 +48,17 @@ Already up-to-date.
 Another example is a **gitb checkout release** will run **git checkout release** in all repositories:
 ```
 === forum_engine (master)
-Switched to branch 'master'
-Your branch is up-to-date with 'origin/master'.
+Switched to branch 'release'
+Your branch is up-to-date with 'origin/release'.
 
 === blog_engine (master)
-Switched to branch 'master'
-Your branch is ahead of 'origin/master' by 2 commits.
+Switched to branch 'release'
+Your branch is ahead of 'origin/release' by 2 commits.
   (use "git push" to publish your local commits)
 
 === your-rails-application (master)
-Switched to branch 'master'
-Your branch is up-to-date with 'origin/master'.
+Switched to branch 'release'
+Your branch is up-to-date with 'origin/release'.
 ```
 
 **2. Updating Gemfile.lock when pushing changes.**
