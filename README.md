@@ -25,13 +25,12 @@ bundle config local.some_gem_or_rails_engine /path/to/forum/git/repository
 bundle config local.some_gem_or_rails_engine /path/to/blog/git/repository
 ```
 
-This gem will make the following scenarios easier and quicker to work with:
+This gem will make the following scenarios easier and quicker:
 
-**1. Performing the same git command on all local overrides and the main application.**
+**1. Performing the same git command on all local overrides in addition to the main application.**
 
 Gitb will relay any command and arguments you pass it to all local override repositories in addition to the main
-repository.  In other words a **gitb pull** will run a **git pull** in all repositories.  This is what the output
-will look like:
+repository.  In other words a **gitb pull** will run a **git pull** in all repositories:
 ```
 === forum_engine (master)
 Already up-to-date.
@@ -64,9 +63,11 @@ Your branch is up-to-date with 'origin/master'.
 
 **2. Updating Gemfile.lock when pushing changes.**
 
-When you want to commit and push changes, the standard process is to commit the engine git repositories first, then
-run *bundle install* on the main application so that it updates the Gemfile.lock with the new git revisions (shown
-below).  Add the Gemfile.lock to a commit and push the main application commits.
+When you want to commit and push changes the standard process is:
+* commit the engine git repositories first.
+* run *bundle install* on the main application so that it updates the Gemfile.lock with the new git revisions (shown
+below).
+* Add the Gemfile.lock to a commit and push the main application commits.
 ```
 GIT
   remote: https://github.com/your_name/forum_engine.git
@@ -74,9 +75,9 @@ GIT
   branch: master
 ```
 
-With this gem you don't need to run *bundle install* to update the Gemfile.lock yourself.  When you push commits it will
-detecting that your Gemfile.lock needs to be updated, run *bundle install*, add the Gemfile.lock to a new commit with an
-appropriate commit message and push it with your other commits.  This is what it looks like if you run **gitb push** in
+With this gem you don't need to run *bundle install* to update the Gemfile.lock yourself.  When you run a push command
+it will detect that your Gemfile.lock needs to be updated, run *bundle install*, add the Gemfile.lock to a new commit
+with an appropriate commit message and push it with your other commits.  This is what it looks like if you run **gitb push** in
 the main application:
 
 ```
