@@ -62,7 +62,6 @@ module GitBundle
       execute_git("commit -m '#{message}' #{files.join(' ')}")
     end
 
-    private
     def execute_git(command)
       full_command = "git -C #{@path} #{command}"
       puts full_command if ENV['DEBUG'] == 'true'
