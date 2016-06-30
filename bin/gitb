@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+$:.push File.expand_path('../lib', __dir__)
+
+require 'git_bundle'
+
+cli = GitBundle::CLI.new
+cli.invoke(ARGV)
