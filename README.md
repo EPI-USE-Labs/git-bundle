@@ -6,7 +6,7 @@ gem 'forum_engine', git: 'https://github.com/your_name/forum_engine.git', branch
 ```
 in combination with [local overrides](http://bundler.io/v1.5/git.html#local):
 ```shell
-bundle config local.some_gem_or_rails_engine /path/to/local/git/repository
+bundle config local.forum_engine /path/to/local/git/repository
 ```
 
 ## Usage examples
@@ -124,7 +124,7 @@ group :development do
 end
 ```
 
-Both should allow you to use the **gitb** command anywhere
+Both should allow you to use the **gitb** command anywhere.
 
 ## Contributing
 
