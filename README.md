@@ -5,7 +5,7 @@ This gem simplifies working with [gems from git repositories](http://bundler.io/
 gem 'forum_engine', git: 'https://github.com/your_name/forum_engine.git', branch: :master
 ```
 in combination with [local overrides](http://bundler.io/v1.5/git.html#local):
-```shell
+```
 bundle config local.forum_engine /path/to/local/git/repository
 ```
 
