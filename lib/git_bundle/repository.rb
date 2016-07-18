@@ -37,12 +37,12 @@ module GitBundle
     end
 
     def commits_not_pushed
-      execute_git("log #{branch} --not --remotes")
+      execute_git("rev-list --pretty=oneline --abbrev-commit origin/#{branch}..#{branch}")
     end
 
     def commit_messages_not_pushed
-      count = execute_git("rev-list #{branch} --count --not --remotes").to_i
-      count.times.map { |num| execute_git("log #{branch} --not --remotes --skip=#{num} --max-count=1 --pretty=format:'%B'").strip }
+      count = execute_git("rev-list origin/#{branch}..#{branch} --count").to_i
+      count.times.map { |num| execute_git("rev-list --pretty=oneline --skip=#{num} --max-count=1 origin/#{branch}..#{branch}").sub(/\h*\s/, '').strip }
     end
 
     def push(args)
