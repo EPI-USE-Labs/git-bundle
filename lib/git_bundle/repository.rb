@@ -21,7 +21,7 @@ module GitBundle
     end
 
     def branch
-      @branch ||= execute_git('rev-parse --abbrev-ref HEAD')
+      @branch ||= execute_git('rev-parse', '--abbrev-ref', 'HEAD').chomp
     end
 
     def locked_branch
@@ -29,7 +29,7 @@ module GitBundle
     end
 
     def revision
-      @revision ||= execute_git('rev-parse --verify HEAD').gsub("\n", '')
+      @revision ||= execute_git('rev-parse', '--verify', 'HEAD').gsub("\n", '')
     end
 
     def locked_revision
@@ -37,37 +37,47 @@ module GitBundle
     end
 
     def commits_not_pushed
-      execute_git("rev-list --pretty=oneline --abbrev-commit origin/#{branch}..#{branch}")
+      execute_git('rev-list', '--pretty=oneline', '--abbrev-commit', "origin/#{branch}..#{branch}")
     end
 
     def commit_messages_not_pushed
-      count = execute_git("rev-list origin/#{branch}..#{branch} --count").to_i
-      count.times.map { |num| execute_git("rev-list --pretty=oneline --skip=#{num} --max-count=1 origin/#{branch}..#{branch}").sub(/\h*\s/, '').strip }
+      count = execute_git('rev-list', "origin/#{branch}..#{branch}", '--count').to_i
+      count.times.map { |num| execute_git('rev-list', '--pretty=oneline', "--skip=#{num}", '--max-count=1', "origin/#{branch}..#{branch}").sub(/\h*\s/, '').strip }
     end
 
     def push(args)
-      puts execute_git("push #{args.join(' ')}")
+      puts execute_git('push', args)
       $?.exitstatus == 0
     end
 
     def file_changed?(filename)
-      !execute_git("diff --name-only #{filename}").empty? && $?.exitstatus == 0
+      !execute_git('diff', '--name-only', filename).empty? && $?.exitstatus == 0
     end
 
     def add_file(filename)
-      execute_git("add #{filename}")
+      execute_git('add', filename)
       $?.exitstatus == 0
     end
 
     def commit(message, *files)
-      execute_git("commit -m '#{message}' #{files.join(' ')}")
+      execute_git('commit', '-m', message, files)
       $?.exitstatus == 0
     end
 
-    def execute_git(command)
-      full_command = "git -C #{@path} #{command}"
-      puts full_command if ENV['DEBUG'] == 'true'
-      `#{full_command}`.strip
+    def execute_git(*args, **options)
+      git_command = ['git', '-C', @path]
+      git_command += %w(-c color.status=always -c color.ui=always) if options.fetch(:color, false)
+      git_command += args.flatten
+      execute(*git_command)
+    end
+
+    def execute(*args)
+      puts args.map{ |arg| "'#{arg}'" }.join(' ') if ENV['DEBUG'] == 'true'
+
+      pipe_out, pipe_in = IO.pipe
+      system *args, out: pipe_in, err: pipe_in
+      pipe_in.close
+      pipe_out.read
     end
   end
 end
