@@ -12,7 +12,7 @@ module GitBundle
         errors = []
         @repositories.each do |repo|
           puts_repo_heading(repo)
-          puts repo.execute_git(@args.join(' '))
+          puts repo.execute_git(@args, color: true)
           errors << repo.name unless $?.exitstatus == 0
         end
 
