@@ -36,13 +36,24 @@ module GitBundle
       @locked_revision || revision
     end
 
+    def stale?
+      revision != locked_revision
+    end
+
+    def stale_commits
+      execute_git('rev-list', '--pretty=oneline', '--abbrev-commit', "#{locked_revision}..#{revision}")
+    end
+
+    def stale_commits_count
+      execute_git('rev-list', '--pretty=oneline', '--abbrev-commit', '--count', "#{locked_revision}..#{revision}").to_i
+    end
+
     def commits_not_pushed
       execute_git('rev-list', '--pretty=oneline', '--abbrev-commit', "origin/#{branch}..#{branch}")
     end
 
-    def commit_messages_not_pushed
-      count = execute_git('rev-list', "origin/#{branch}..#{branch}", '--count').to_i
-      count.times.map { |num| execute_git('rev-list', '--pretty=oneline', "--skip=#{num}", '--max-count=1', "origin/#{branch}..#{branch}").sub(/\h*\s/, '').strip }
+    def commits_not_pushed_count
+      execute_git('rev-list', '--pretty=oneline', '--abbrev-commit', '--count', "origin/#{branch}..#{branch}").to_i
     end
 
     def push(args)

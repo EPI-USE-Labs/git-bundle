@@ -12,7 +12,10 @@ module GitBundle
         return false unless prompt_confirm
 
         lockfile = Bundler.default_lockfile.basename.to_s
-        if gemfile_lock_stale?
+        stale_repos = @repositories.select { |repo| !repo.main && repo.stale? }
+        stale_commits_message = stale_repos.map { |repo| "#{repo.name}(#{repo.stale_commits_count})" }.join(', ')
+
+        if stale_repos.any?
           puts "Local gems were updated. Building new #{lockfile} with bundle install."
           unless build_gemfile_lock
             puts_error 'Bundle install failed.  Please run it manually before trying to push changes.'
@@ -20,8 +23,19 @@ module GitBundle
           end
         end
 
-        combined_messages = @repositories.map { |repo| repo.commit_messages_not_pushed }.uniq.join("\n\n")
-        @repositories.reject { |repo| repo.main || repo.commits_not_pushed.empty? }.each do |repo|
+        if main_repository.file_changed?(lockfile)
+          main_repository.add_file(lockfile)
+          if stale_commits_message.empty?
+            message = 'Updated Gemfile.lock.'
+          else
+            message = "Gemfile.lock includes new commits of: #{stale_commits_message}."
+          end
+
+          main_repository.commit(message, lockfile)
+          puts message
+        end
+
+        @repositories.select { |repo| !repo.main && repo.commits_not_pushed_count > 0 }.each do |repo|
           puts_repo_heading(repo)
           unless repo.push(@args)
             puts_error "Failed to push changes of #{repo.name}.  Try pulling the latest changes or resolve conflicts first."
@@ -30,11 +44,6 @@ module GitBundle
         end
 
         puts_repo_heading(main_repository)
-        if main_repository.file_changed?(lockfile)
-          main_repository.add_file(lockfile)
-          main_repository.commit("Updated Gemfile.lock to include changes: #{combined_messages}", lockfile)
-        end
-
         unless main_repository.push(@args)
           puts_error "Failed to push changes of #{main_repository.name}.  Try pulling the latest changes or resolve conflicts first."
         end
@@ -82,7 +91,7 @@ module GitBundle
       end
 
       def gemfile_lock_stale?
-        @repositories.any? { |repo| repo.revision != repo.locked_revision }
+        @repositories.any? { |repo| repo.stale? }
       end
 
       def build_gemfile_lock
