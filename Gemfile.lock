@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    git-bundle (1.0.2)
+    git-bundle (1.0.7)
 
 GEM
   remote: https://rubygems.org/
@@ -15,4 +15,4 @@ DEPENDENCIES
   git-bundle!
 
 BUNDLED WITH
-   1.12.5
+   1.15.3
