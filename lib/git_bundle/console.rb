@@ -3,7 +3,13 @@ module GitBundle
     COLORS = {error: 31,
               attention: 32,
               prompt: 33,
-              heading: 34}
+              heading: 34,
+              highlight: 36}
+
+    def clear_line
+      STDOUT.print "\r\e[0K"
+      STDOUT.flush
+    end
 
     def puts_repo_heading(repo)
       puts colorize("\n=== #{repo.name} (#{repo.branch})", COLORS[:heading], true)
