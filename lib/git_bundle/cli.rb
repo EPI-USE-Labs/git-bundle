@@ -13,6 +13,10 @@ module GitBundle
           puts `git #{args.join(' ')}`.gsub('git', 'gitb')
         when 'push'
           GitBundle::Commands::Push.new(@project, args[1..-1]).invoke
+        when 'checkout'
+          GitBundle::Commands::Checkout.new(@project, args[1..-1]).invoke
+        when 'checkout_all'
+          GitBundle::Commands::Generic.new(@project, ['checkout'] + args[1..-1]).invoke
         else
           GitBundle::Commands::Generic.new(@project, args).invoke
       end
