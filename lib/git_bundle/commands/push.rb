@@ -3,17 +3,22 @@ module GitBundle
     class Push
       include GitBundle::Console
 
-      def initialize(repositories, args)
-        @repositories = repositories
+      def initialize(project, args)
+        @project = project
         @args = args
       end
 
       def invoke
+        @project.load_dependant_repositories
         return false unless prompt_confirm
 
+        main_repository = @project.main_repository
+
         lockfile = Bundler.default_lockfile.basename.to_s
-        stale_repos = @repositories.select { |repo| !repo.main && repo.stale? }
-        stale_commits_message = stale_repos.map { |repo| "#{repo.name}(#{repo.stale_commits_count})" }.join(', ')
+        stale_repos = @project.repositories.select { |repo| !repo.main && repo.stale? }
+        stale_commits_message = stale_repos.map do |repo|
+          repo.upstream_branch_exists? ? "#{repo.name}(#{repo.stale_commits_count})" : "#{repo.name}(new branch)"
+        end.join(', ')
 
         if stale_repos.any?
           puts "Local gems were updated. Building new #{lockfile} with bundle install."
@@ -35,48 +40,61 @@ module GitBundle
           puts message
         end
 
-        @repositories.select { |repo| !repo.main && repo.commits_not_pushed_count > 0 }.each do |repo|
+        @project.dependant_repositories.select { |repo| repo.commits_not_pushed? }.each do |repo|
           puts_repo_heading(repo)
-          unless repo.push(@args)
+
+          create_upstream = !repo.upstream_branch_exists?
+          unless repo.push(@args, create_upstream: create_upstream)
             puts_error "Failed to push changes of #{repo.name}.  Try pulling the latest changes or resolve conflicts first."
             return false
           end
         end
 
         puts_repo_heading(main_repository)
-        unless main_repository.push(@args)
+        create_upstream = !main_repository.upstream_branch_exists?
+        unless main_repository.push(@args, create_upstream: create_upstream)
           puts_error "Failed to push changes of #{main_repository.name}.  Try pulling the latest changes or resolve conflicts first."
         end
       end
 
       private
       def prompt_confirm
-        if main_repository.file_changed?('Gemfile')
+        if @project.main_repository.file_changed?('Gemfile')
           puts_error 'Your Gemfile has uncommitted changes.  Commit them first before pushing.'
           return false
         end
 
         commits_to_push = false
-        @repositories.each do |repo|
+        upstream_branches_missing = []
+        @project.repositories.each do |repo|
           commits = repo.commits_not_pushed
           puts_repo_heading(repo)
 
-          if commits.empty?
-            puts 'No changes.'
+          if repo.upstream_branch_exists?
+            if commits.empty?
+              puts 'No changes.'
+            else
+              commits_to_push = true
+              puts commits
+            end
           else
-            commits_to_push = true
-            puts commits
+            upstream_branches_missing << repo.name
+            puts 'Remote branch does not exist yet.'
           end
         end
 
-        if commits_to_push
+        if !upstream_branches_missing.empty?
+          puts_prompt("Missing upstream branches (#{upstream_branches_missing.join(', ')}) will be created and changes pushed.")
+          puts_prompt('Do you want to continue? (Y/N)')
+
+        elsif commits_to_push
           puts_prompt('Are you sure you want to push these changes? (Y/N)')
 
         elsif gemfile_lock_stale?
           puts_prompt('Although you don\'t have any commits to push, your Gemfile.lock needs to be rebuilt, committed and pushed.')
           puts_prompt('Do you want to continue? (Y/N)')
 
-        elsif main_repository.file_changed?('Gemfile.lock')
+        elsif @project.main_repository.file_changed?('Gemfile.lock')
           puts_prompt('Although you don\'t have any commits to push, your Gemfile.lock needs to be committed and pushed.')
           puts_prompt('Do you want to continue? (Y/N)')
         else
@@ -86,16 +104,12 @@ module GitBundle
         STDIN.getch.upcase == 'Y'
       end
 
-      def main_repository
-        @repositories.find { |repo| repo.main }
-      end
-
       def gemfile_lock_stale?
-        @repositories.any? { |repo| repo.stale? }
+        @project.repositories.any? { |repo| repo.stale? }
       end
 
       def build_gemfile_lock
-        Dir.chdir(main_repository.path) do
+        Dir.chdir(@project.main_repository.path) do
           puts `bundle install --quiet`
           return $?.exitstatus == 0
         end

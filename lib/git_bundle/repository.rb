@@ -2,7 +2,9 @@ module GitBundle
   class Repository
     attr_reader :name,
                 :path,
-                :main
+                :main,
+                :branch,
+                :locked_branch
 
     def self.new_main(name, path)
       GitBundle::Repository.new(name, path, true, nil, nil)
@@ -16,12 +18,13 @@ module GitBundle
       @name = name
       @path = path
       @main = main_repository
+      @branch = fetch_branch
       @locked_branch = locked_branch
       @locked_revision = locked_revision
     end
 
-    def branch
-      @branch ||= execute_git('rev-parse', '--abbrev-ref', 'HEAD').chomp
+    def fetch_branch
+      execute_git('rev-parse', '--abbrev-ref', 'HEAD').chomp
     end
 
     def locked_branch
@@ -40,12 +43,26 @@ module GitBundle
       revision != locked_revision
     end
 
+    def reference_exists?(reference)
+      execute_git('cat-file', '-e', reference)
+      $?.exitstatus == 0
+    end
+
+    def upstream_branch_exists?
+      reference_exists?("origin/#{branch}")
+    end
+
     def stale_commits
       execute_git('rev-list', '--pretty=oneline', '--abbrev-commit', "#{locked_revision}..#{revision}")
     end
 
     def stale_commits_count
       execute_git('rev-list', '--pretty=oneline', '--abbrev-commit', '--count', "#{locked_revision}..#{revision}").to_i
+    end
+
+    def commits_not_pushed?
+      return true unless upstream_branch_exists?
+      commits_not_pushed_count > 0
     end
 
     def commits_not_pushed
@@ -56,8 +73,14 @@ module GitBundle
       execute_git('rev-list', '--pretty=oneline', '--abbrev-commit', '--count', "origin/#{branch}..#{branch}").to_i
     end
 
-    def push(args)
+    def push(args, create_upstream: false)
+      args = args.dup + ['--set-upstream', 'origin', branch] if create_upstream
       puts execute_git('push', args)
+      $?.exitstatus == 0
+    end
+
+    def checkout(args)
+      puts execute_git('checkout', args)
       $?.exitstatus == 0
     end
 
@@ -83,7 +106,7 @@ module GitBundle
     end
 
     def execute(*args)
-      puts args.map{ |arg| "'#{arg}'" }.join(' ') if ENV['DEBUG'] == 'true'
+      puts args.map { |arg| "'#{arg}'" }.join(' ') if ENV['DEBUG'] == 'true'
 
       pipe_out, pipe_in = IO.pipe
       system *args, out: pipe_in, err: pipe_in
