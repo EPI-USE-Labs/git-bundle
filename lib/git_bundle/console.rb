@@ -1,3 +1,5 @@
+require 'io/console'
+
 module GitBundle
   module Console
     COLORS = { error: 31,
