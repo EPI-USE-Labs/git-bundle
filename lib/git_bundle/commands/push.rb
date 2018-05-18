@@ -2,6 +2,7 @@ module GitBundle
   module Commands
     class Push
       include GitBundle::Console
+      include GitBundle::Shell
 
       def initialize(project, args)
         @project = project
@@ -20,6 +21,13 @@ module GitBundle
           repo.upstream_branch_exists? ? "#{repo.name}(#{repo.stale_commits_count})" : "#{repo.name}(new branch)"
         end.join(', ')
 
+        stale_commits_description = ''
+        stale_repos.select(&:upstream_branch_exists?).each do |repo|
+          stale_commits_description << "== #{repo.name} ==\n"
+          stale_commits_description << repo.stale_commits
+          stale_commits_description << "\n\n"
+        end
+
         if stale_repos.any?
           puts "Local gems were updated. Building new #{lockfile} with bundle install."
           unless build_gemfile_lock
@@ -36,7 +44,7 @@ module GitBundle
             message = "Gemfile.lock includes new commits of: #{stale_commits_message}."
           end
 
-          main_repository.commit(message, lockfile)
+          main_repository.commit_with_description(message, stale_commits_description, lockfile)
           puts message
         end
 
@@ -110,7 +118,7 @@ module GitBundle
 
       def build_gemfile_lock
         Dir.chdir(@project.main_repository.path) do
-          puts `bundle install --quiet`
+          execute_live('bundle', 'install', '--quiet')
           return $?.exitstatus == 0
         end
       end

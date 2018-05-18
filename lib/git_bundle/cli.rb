@@ -18,6 +18,8 @@ module GitBundle
         else
           GitBundle::Commands::Generic.new(@project, args).invoke
       end
+    rescue Bundler::GemfileNotFound => e
+      puts_error("Could not find Gemfile in the current directory")
     end
   end
 end

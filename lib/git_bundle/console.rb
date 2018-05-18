@@ -39,9 +39,13 @@ module GitBundle
       puts colorize(text, COLORS[:error])
     end
 
-    def puts_wait_line(names)
-      STDOUT.print "Waiting for #{names.map { |name| colorize(name, COLORS[:highlight], true) }.join(', ')}"
+    def puts_stay_on_line(text)
+      STDOUT.print text
       STDOUT.flush
+    end
+
+    def puts_wait_line(names)
+      puts_stay_on_line "Waiting for #{names.map { |name| colorize(name, COLORS[:highlight], true) }.join(', ')}"
     end
 
     def parallel(items, heading_proc = nil)

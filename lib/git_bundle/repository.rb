@@ -1,5 +1,7 @@
 module GitBundle
   class Repository
+    include GitBundle::Shell
+
     attr_reader :name,
                 :path,
                 :main,
@@ -75,12 +77,12 @@ module GitBundle
 
     def push(args, create_upstream: false)
       args = args.dup + ['--set-upstream', 'origin', branch] if create_upstream
-      puts execute_git('push', args)
+      execute_git_output('push', args)
       $?.exitstatus == 0
     end
 
     def checkout(args)
-      puts execute_git('checkout', args)
+      execute_git_output('checkout', args)
       $?.exitstatus == 0
     end
 
@@ -98,20 +100,23 @@ module GitBundle
       $?.exitstatus == 0
     end
 
-    def execute_git(*args, **options)
-      git_command = ['git', '-C', @path]
-      git_command += %w(-c color.status=always -c color.ui=always) if options.fetch(:color, false)
-      git_command += args.flatten
-      execute(*git_command)
+    def commit_with_description(message, description, *files)
+      execute_git('commit', '-m', message, '-m', description, files)
+      $?.exitstatus == 0
     end
 
-    def execute(*args)
-      puts args.map { |arg| "'#{arg}'" }.join(' ') if ENV['DEBUG'] == 'true'
+    def git_command(*args, **options)
+      git_command = ['git', '-C', @path]
+      git_command += %w(-c color.status=always -c color.ui=always) if options.fetch(:color, false)
+      git_command + args.flatten
+    end
 
-      pipe_out, pipe_in = IO.pipe
-      system *args, out: pipe_in, err: pipe_in
-      pipe_in.close
-      pipe_out.read
+    def execute_git(*args, **options)
+      execute(*git_command(*args, **options))
+    end
+
+    def execute_git_output(*args, **options)
+      execute_live(*git_command(*args, **options))
     end
   end
 end
