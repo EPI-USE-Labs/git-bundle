@@ -78,7 +78,7 @@ module GitBundle
     def push(args, create_upstream: false)
       args = args.dup + ['--set-upstream', 'origin', branch] if create_upstream
       execute_git_output('push', args)
-      $?.exitstatus == 0
+      $?.exitstatus == 0 || (create_upstream && $?.exitstatus == 128)
     end
 
     def checkout(args)
