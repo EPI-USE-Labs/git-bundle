@@ -20,13 +20,13 @@ module GitBundle
       @name = name
       @path = path
       @main = main_repository
-      @branch = fetch_branch
       @locked_branch = locked_branch
       @locked_revision = locked_revision
+      refresh_branch
     end
 
-    def fetch_branch
-      execute_git('rev-parse', '--abbrev-ref', 'HEAD').chomp
+    def refresh_branch
+      @branch = execute_git('rev-parse', '--abbrev-ref', 'HEAD').chomp
     end
 
     def locked_branch
