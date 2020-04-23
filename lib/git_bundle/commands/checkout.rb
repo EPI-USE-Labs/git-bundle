@@ -55,7 +55,7 @@ module GitBundle
 
       def checkout_parallel(repositories, fallback_branch)
         parallel(repositories) do |repo|
-          output = repo.execute_git(['checkout', branch_config[repo.name] || fallback_branch], color: true)
+          output = repo.execute_git(['checkout', branch_config&.dig(repo.name) || fallback_branch], color: true)
           repo.refresh_branch
           ExecutionResult.new($?.exitstatus != 0, output)
         end
