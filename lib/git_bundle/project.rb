@@ -30,6 +30,10 @@ module GitBundle
       end
     end
 
+    def branch_config
+      @branch_config ||= GitBundle::BranchConfig.new
+    end
+
     def repositories
       @dependant_repositories + [@main_repository]
     end

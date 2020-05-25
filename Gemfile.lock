@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    git-bundle (1.0.11)
+    git-bundle (1.0.12)
 
 GEM
   remote: https://rubygems.org/
