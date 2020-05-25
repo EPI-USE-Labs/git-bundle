@@ -10,7 +10,7 @@ module GitBundle
 
       def invoke
         @project.load_dependant_repositories
-        @project.repositories.each {|p| @project.branch_config.current[p.name] = p.branch}
+        @project.dependant_repositories.each {|p| @project.branch_config.current[p.name] = p.branch}
         @project.branch_config.save
       end
     end

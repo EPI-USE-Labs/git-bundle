@@ -27,11 +27,15 @@ module GitBundle
     end
 
     def save
-      File.open(path, 'w') {|file| file.write(current.to_yaml.lines[1..-1].join)}
-      if File.exists?(path)
-        puts "\t#{colorize('update', 34, bold: true)}\t#{filename}"
+      if changed?
+        File.open(path, 'w') {|file| file.write(current.to_yaml.lines[1..-1].join)}
+        if File.exists?(path)
+          puts "\t#{colorize('update', 34, bold: true)}\t#{filename}"
+        else
+          puts "\t#{colorize('create', 32, bold: true)}\t#{filename}"
+        end
       else
-        puts "\t#{colorize('create', 32, bold: true)}\t#{filename}"
+        puts "\t#{colorize('identical', 34, bold: true)}\t#{filename}"
       end
     end
   end
