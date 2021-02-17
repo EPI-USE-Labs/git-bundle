@@ -66,6 +66,7 @@ module GitBundle
       end
 
       private
+
       def prompt_confirm
         if @project.main_repository.file_changed?('Gemfile')
           puts_error 'Your Gemfile has uncommitted changes.  Commit them first before pushing.'
@@ -74,6 +75,7 @@ module GitBundle
 
         commits_to_push = false
         upstream_branches_missing = []
+        diverged_repos = []
         @project.repositories.each do |repo|
           commits = repo.commits_not_pushed
           puts_repo_heading(repo)
@@ -83,11 +85,23 @@ module GitBundle
               puts 'No changes.'
             else
               commits_to_push = true
+              diverged_repos << repo if repo.branch != @project.main_repository.branch
               puts commits
             end
           else
             upstream_branches_missing << repo.name
             puts 'Remote branch does not exist yet.'
+          end
+        end
+
+        if diverged_repos.any?
+          puts_prompt("\nThese repositories have changes and have diverged from the main application's branch (#{@project.main_repository.branch})")
+          puts_diverged_repos(diverged_repos)
+          puts_prompt("\nDo you want to continue? (Y/N)")
+          if STDIN.getch.upcase == 'Y'
+            puts ''
+          else
+            return false
           end
         end
 

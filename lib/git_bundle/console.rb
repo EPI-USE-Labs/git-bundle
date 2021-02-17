@@ -23,6 +23,10 @@ module GitBundle
       puts colorize("\n=== #{repo.name} (#{repo.branch} ⇒ #{new_branch})", COLORS[:heading], true)
     end
 
+    def puts_diverged_repos(repos)
+      repos.each { |repo| puts colorize("  #{repo.name} (#{repo.branch})", COLORS[:prompt], true) }
+    end
+
     def puts_heading(text)
       puts colorize("\n=== #{text}", COLORS[:heading])
     end
@@ -88,6 +92,7 @@ module GitBundle
     end
 
     private
+
     def colorize(text, color_code, bold = false)
       if bold
         "\e[1m\e[#{color_code}m#{text}\e[0m"
