@@ -10,8 +10,16 @@ module GitBundle
 
       def invoke
         @project.load_dependant_repositories
-        @project.dependant_repositories.each {|p| @project.branch_config.current[p.name] = p.branch}
+        @project.dependant_repositories.each { |repo| @project.branch_config.current[repo.name] = remote_branch_reference(repo) }
         @project.branch_config.save
+      end
+
+      def remote_branch_reference(repository)
+        if repository.remote
+          "#{repository.remote}/#{repository.branch}"
+        else
+          repository.branch
+        end
       end
     end
   end

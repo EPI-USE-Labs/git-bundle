@@ -11,7 +11,12 @@ module GitBundle
 
       def invoke
         @project.load_dependant_repositories
-        return false unless prompt_confirm
+        remote = @args.first || @project.main_repository.remote
+        unless remote
+          puts_error "New branch '#{@project.main_repository.branch}' is not tracking a remote branch. Specify which remote to push to, example:\n\tgitb push origin"
+          return false
+        end
+        return false unless prompt_confirm(remote)
 
         main_repository = @project.main_repository
 
@@ -22,7 +27,7 @@ module GitBundle
         end.join(', ')
 
         stale_commits_description = ''
-        stale_repos.select(&:upstream_branch_exists?).each do |repo|
+        stale_repos.select { |r| r.upstream_branch_exists? }.each do |repo|
           stale_commits_description << "== #{repo.name} ==\n"
           stale_commits_description << repo.stale_commits
           stale_commits_description << "\n\n"
@@ -51,7 +56,11 @@ module GitBundle
         @project.dependant_repositories.select { |repo| repo.commits_not_pushed? }.each do |repo|
           puts_repo_heading(repo)
 
-          create_upstream = !repo.upstream_branch_exists?
+          create_upstream = repo.upstream_branch_exists? ? nil : remote
+          if create_upstream && !repo.remote_exists?(create_upstream)
+            puts_error "Invalid remote: #{remote}"
+            return false
+          end
           unless repo.push(@args, create_upstream: create_upstream)
             puts_error "Failed to push changes of #{repo.name}.  Try pulling the latest changes or resolve conflicts first."
             return false
@@ -59,7 +68,7 @@ module GitBundle
         end
 
         puts_repo_heading(main_repository)
-        create_upstream = !main_repository.upstream_branch_exists?
+        create_upstream = main_repository.upstream_branch_exists? ? nil : remote
         unless main_repository.push(@args, create_upstream: create_upstream)
           puts_error "Failed to push changes of #{main_repository.name}.  Try pulling the latest changes or resolve conflicts first."
         end
@@ -67,7 +76,7 @@ module GitBundle
 
       private
 
-      def prompt_confirm
+      def prompt_confirm(remote)
         if @project.main_repository.file_changed?('Gemfile')
           puts_error 'Your Gemfile has uncommitted changes.  Commit them first before pushing.'
           return false
@@ -90,7 +99,7 @@ module GitBundle
             end
           else
             upstream_branches_missing << repo.name
-            puts 'Remote branch does not exist yet.'
+            puts "Remote branch #{remote}/#{repo.branch} does not exist yet."
           end
         end
 

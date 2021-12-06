@@ -5,6 +5,7 @@ module GitBundle
     attr_reader :name,
                 :path,
                 :main,
+                :remote,
                 :branch,
                 :locked_branch
 
@@ -26,6 +27,7 @@ module GitBundle
     end
 
     def refresh_branch
+      @remote = execute(*git_command('rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}'), silence_err: true).split('/').first
       @branch = execute_git('rev-parse', '--abbrev-ref', 'HEAD').chomp
     end
 
@@ -50,8 +52,12 @@ module GitBundle
       $?.exitstatus == 0
     end
 
+    def remote_exists?(remote_name)
+      execute_git('remote').split("\n").include?(remote_name)
+    end
+
     def upstream_branch_exists?
-      reference_exists?("origin/#{branch}")
+      reference_exists?("#{remote}/#{branch}")
     end
 
     def stale_commits
@@ -68,15 +74,16 @@ module GitBundle
     end
 
     def commits_not_pushed
-      execute_git('rev-list', '--pretty=oneline', '--abbrev-commit', "origin/#{branch}..#{branch}")
+      execute_git('rev-list', '--pretty=oneline', '--abbrev-commit', "#{remote}/#{branch}..#{branch}")
     end
 
     def commits_not_pushed_count
-      execute_git('rev-list', '--pretty=oneline', '--abbrev-commit', '--count', "origin/#{branch}..#{branch}").to_i
+      execute_git('rev-list', '--pretty=oneline', '--abbrev-commit', '--count', "#{remote}/#{branch}..#{branch}").to_i
     end
 
-    def push(args, create_upstream: false)
-      args = args.dup + ['--set-upstream', 'origin', branch] if create_upstream
+    # Example: push([], create_upstream: 'origin')
+    def push(args, create_upstream: nil)
+      args = args.dup + ['--set-upstream', create_upstream, branch] if create_upstream
       execute_git_output('push', args)
       $?.exitstatus == 0 || (create_upstream && $?.exitstatus == 128)
     end
