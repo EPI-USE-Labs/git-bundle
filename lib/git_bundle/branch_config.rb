@@ -18,6 +18,24 @@ module GitBundle
       @current = read
     end
 
+    def remote(repo_name)
+      source = current[repo_name]
+      if source.include?(' ')
+        source.split(' ').first
+      else
+        nil
+      end
+    end
+
+    def branch(repo_name)
+      source = current[repo_name]
+      if source.include?(' ')
+        source.split(' ').last
+      else
+        source
+      end
+    end
+
     def read
       File.exists?(path) ? YAML.load_file(path) || {} : nil
     end
@@ -28,7 +46,7 @@ module GitBundle
 
     def save
       if changed?
-        File.open(path, 'w') {|file| file.write(current.to_yaml.lines[1..-1].join)}
+        File.open(path, 'w') { |file| file.write(current.to_yaml.lines[1..-1].join) }
         if File.exists?(path)
           puts "\t#{colorize('update', 34, bold: true)}\t#{filename}"
         else

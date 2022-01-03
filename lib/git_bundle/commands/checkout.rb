@@ -10,55 +10,68 @@ module GitBundle
 
       def invoke
         @project.load_dependant_repositories
+        remaining_args = @args.dup
+        flag = remaining_args.first&.chars&.first == "-" ? remaining_args.shift : nil
+        branch = remaining_args.shift
 
-        if @args.empty?
-          checkout_parallel(@project.dependant_repositories, @project.main_repository.branch)
+        if remaining_args.any? || (flag && branch.nil?)
+          puts_error "Invalid arguments for checkout.  Usage: \n\tgitb checkout\n\tgitb checkout <branch>\n\tgitb checkout <remote/branch>\n\tgitb checkout -b <new branch>\n\tgitb checkout -a <force branch all repositories>"
+          return
+        end
 
-        elsif @args.size == 1
-          if checkout(@project.main_repository, @args.first)
-            checkout_parallel(@project.dependant_repositories, @args.first)
-          end
-        elsif @args.size == 2 && @args.first == '-b'
-          if checkout(@project.main_repository, @args.last, create_new: true, force: true)
-            @project.dependant_repositories.each {|r| checkout(r, @args.last, create_new: true)}
+        case
+        when flag == "-a" || flag == "--all"
+          if checkout(@project.main_repository, branch)
+            @project.dependant_repositories.each { |r| checkout(r, branch) }
           end
           @project.branch_config.save if @project.branch_config.changed?
-        elsif @args.size == 2 && (@args.first == '-a' || @args.first == '--all')
-          if checkout(@project.main_repository, @args.last)
-            @project.dependant_repositories.each {|r| checkout(r, @args.last)}
+        when flag == "-b"
+          if checkout(@project.main_repository, branch, create_new: true, force: true)
+            @project.dependant_repositories.each { |r| checkout(r, branch, create_new: true) }
           end
           @project.branch_config.save if @project.branch_config.changed?
+        when branch.nil?
+          checkout_parallel(@project.dependant_repositories, fallback_branch: @project.main_repository.branch)
         else
-          puts_error "Invalid arguments for checkout.  Usage: \n\tgitb checkout\n\tgitb checkout <branch>\n\tgitb checkout -b <new branch>\n\tgitb checkout -a <force branch all repositories>"
+          if checkout(@project.main_repository, branch)
+            checkout_parallel(@project.dependant_repositories, fallback_branch: branch)
+          end
         end
       end
 
       def checkout(repo, branch, create_new: false, force: false)
+        args = ['checkout']
         if create_new
           unless force
             puts_repo_heading(repo)
             puts_prompt("Create #{branch}? (Y/N)")
             return unless STDIN.getch.upcase == 'Y'
           end
-          args = ['checkout', '-b', branch]
-        else
-          args = ['checkout', branch]
+          args << '-b'
         end
+        args << branch
 
         output = repo.execute_git(args, color: true)
         success = $?.exitstatus == 0
         repo.refresh_branch
         puts_repo_heading(repo) unless create_new && !force
-        success ? puts(output) : puts_error(output)
-        if success && !repo.main && @project.branch_config.current && @project.branch_config.current[repo.name] != branch
-          @project.branch_config.current[repo.name] = branch
+        if success && !repo.main && create_new && @project.branch_config.current
+          old_remote = @project.branch_config.remote(repo.name)
+          if old_remote
+            @project.branch_config.current[repo.name] = "#{old_remote} #{branch}"
+          else
+            @project.branch_config.current[repo.name] = branch
+          end
+          puts(output)
+        else
+          puts_error(output)
         end
         success
       end
 
-      def checkout_parallel(repositories, fallback_branch)
+      def checkout_parallel(repositories, fallback_branch: nil)
         parallel(repositories) do |repo|
-          output = repo.execute_git(['checkout', @project.branch_config.current&.dig(repo.name) || fallback_branch], color: true)
+          output = repo.execute_git(['checkout', @project.branch_config.branch(repo.name) || fallback_branch], color: true)
           repo.refresh_branch
           ExecutionResult.new($?.exitstatus != 0, output)
         end

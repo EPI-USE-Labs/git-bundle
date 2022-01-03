@@ -16,7 +16,7 @@ module GitBundle
 
       def remote_branch_reference(repository)
         if repository.remote
-          "#{repository.remote}/#{repository.branch}"
+          "#{repository.remote} #{repository.branch}"
         else
           repository.branch
         end
