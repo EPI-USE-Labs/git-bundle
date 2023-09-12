@@ -6,8 +6,8 @@ require 'git_bundle/version'
 Gem::Specification.new do |spec|
   spec.name          = 'git-bundle'
   spec.version       = GitBundle::VERSION
-  spec.authors       = ['Pierre Pretorius']
-  spec.email         = ['pierre@labs.epiuse.com']
+  spec.authors       = ['Pierre Pretorius', 'Divan Burger']
+  spec.email         = ['pierre@labs.epiuse.com', 'divan@labs.epiuse.com']
   spec.summary       = %q{Simplifies working with gems from git repositories in combination with local overrides.}
   spec.description   = %q{Simplifies working with gems from git repositories in combination with local overrides.
                           See the github page for more detail.}
@@ -18,5 +18,5 @@ Gem::Specification.new do |spec|
   spec.executables   = 'gitb'
   spec.require_paths = ['lib']
 
-  spec.add_development_dependency 'bundler', '~> 1.12'
+  spec.add_development_dependency 'bundler', '~> 2.4.19'
 end

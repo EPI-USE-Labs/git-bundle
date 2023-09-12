@@ -11,8 +11,8 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  bundler (~> 1.12)
+  bundler (~> 2.4.19)
   git-bundle!
 
 BUNDLED WITH
-   1.17.3
+   2.4.19
