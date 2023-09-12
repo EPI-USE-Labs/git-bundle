@@ -37,7 +37,7 @@ module GitBundle
     end
 
     def read
-      File.exists?(path) ? YAML.load_file(path) || {} : nil
+      File.exist?(path) ? YAML.load_file(path) || {} : nil
     end
 
     def changed?
@@ -47,7 +47,7 @@ module GitBundle
     def save
       if changed?
         File.open(path, 'w') { |file| file.write(current.to_yaml.lines[1..-1].join) }
-        if File.exists?(path)
+        if File.exist?(path)
           puts "\t#{colorize('update', 34, bold: true)}\t#{filename}"
         else
           puts "\t#{colorize('create', 32, bold: true)}\t#{filename}"
